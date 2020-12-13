@@ -370,3 +370,309 @@ a b 2 [1 2 3 [a b]]
 => ["John" "Smith" "Moscow" "Vadkovsky per"]
 
 
+; Создание макроса, понимающего обчную, не польскую нотацию...
+(defmacro infix [a oper b] (list oper a b)) (infix 1 + 2)
+=> #'user/infix
+=> 3
+
+
+; Написание макроса с обратным условием...
+(defmacro unless [expression then else]
+  (list 'if test else then)) (unless (> 5 2) (println "a < b") (println "a > b"))
+=> #'user/unless
+a > b
+
+
+
+; Представление выражения в виде кода...
+(defmacro unless [expression then else]
+  `(if test else then)) 
+'(unless (> 5 2) (println "a < b") (println "a > b"))
+=> #'user/unless
+=> (unless (> 5 2) (println "a < b") (println "a > b"))
+
+
+; ~ Выступает в качестве параметра...
+(defmacro unless [expression then else]
+  `(if ~test ~else ~then)) 
+(unless (> 5 2) (println "a < b") (println "a > b"))
+=> #'user/unless
+a > b
+=> nil
+
+
+
+; Разыменование ссылки(применяется для вызова promise, future).
+; 1 вариант...
+(deref reference)
+
+; 2 вариант, более компактный...
+(@reference)
+
+
+
+; Пример с выполнением future, выбрасывающем исключение...
+(def f (future (throw (Exception. "Hello from the future!")))) 
+(@f)
+
+Execution error at user/fn (form-init14986200828704233027.clj:1).
+Hello from the future!
+
+
+
+; Применение функции swap для изменения атома...
+(defn example []
+  (def myatom (atom 1))
+  (println @myatom)
+
+  (swap! myatom inc)
+  (println @myatom)) (example)
+
+1
+2
+=> #'user/example
+=> nil
+
+
+
+; Пример использования агента для вычисления суммирующего значения всех элементов вектора...
+(def sum (agent 0)) 
+(def numbers [0 9 3 4 5 5 4 44 4 2 5 6 7 775])
+
+(doseq [x numbers]
+  (send sum + x))
+
+; Ожидание пока не выполнятся действия с sum...
+(await sum)
+
+(println @sum)
+
+=> #'user/sum
+=> #'user/numbers
+=> nil
+=> nil
+873
+=> nil
+
+
+
+; Использование функции cycle для создания ленивых бесконечных цикличных последовательностей...
+(take 5 (cycle ["a" "b"]))
+=>("a" "b" "a" "b" "a")
+
+user=> (take 10 (cycle (range 0 3)))
+=>(0 1 2 0 1 2 0 1 2 0)
+
+
+; Multiplies every x by every y...
+(doseq [x [-1 0 1]
+        y [1  2 3]]
+  (prn (* x y)))
+-1
+-2
+-3
+0
+0
+0
+1
+2
+3
+
+
+; Применение функции map для реализации работы...
+(map list [1 2 3] [1 2 3])
+=> ((1 1) (2 2) (3 3))
+
+
+
+; Использование функции send для агента...
+user=> (def my-agent (agent 100))
+#'user/my-agent
+
+user=> @my-agent
+100
+
+user=> (send my-agent + 100)
+#<Agent@5afc0f5: 200>
+
+user=> @my-agent
+200
+
+
+; Пример использования метода wait для ожидания завершения потока или агента.
+; Макрос send отправляет действие агенту...
+(def agnt (agent {}))
+
+(send-off agnt (fn [state] 
+               (Thread/sleep 10000)
+               (assoc state :done true)))
+=> <Agent@5db18235: {}>
+
+(await agnt)
+=> nil
+
+
+
+; Примеры использования макроса assoc
+(assoc {} :key1 "value" :key2 "another value")
+;;=> {:key2 "another value", :key1 "value"}
+
+;; Here we see an overwrite by a second entry with the same key
+(assoc {:key1 "old value1" :key2 "value2"} 
+        :key1 "value1" :key3 "value3")
+;;=> {:key3 "value3", :key2 "value2", :key1 "value1"}
+
+;; 'assoc' can be used on a vector (but not a list), in this way: 
+;; (assoc vec index replacement)
+(assoc [1 2 3] 0 10)     ;;=> [10 2 3]
+(assoc [1 2 3] 2 '(4 6)) ;;=> [1 2 (4 6)]
+
+
+
+; Пример использования макроса spit для записи в файл, slurp для чтения...
+user=> (spit "flubber.txt" "test")
+nil
+user=> (slurp "flubber.txt")
+"test"
+
+
+; Создание переменной типа volatile...
+(def keep-running? (volatile! true))
+
+
+
+; Пример использоваемя макроса apply...
+
+(apply str ["str1" "str2" "str3"])  ;;=> "str1str2str3"
+(str "str1" "str2" "str3")          ;;=> "str1str2str3"
+
+(apply max [1 2 3])
+;;=> 3 
+
+;; which is the same as 
+(max 1 2 3)
+;;=> 3
+
+
+
+; Пример использования блокировки...
+(def log-lock (Object.))
+
+(defn log [& args]
+  (locking log-lock
+    (apply println args)))
+
+;; Thread 1
+(log "INFO 2017-4-29: Starting database connection.")
+
+;; Thread 2
+(log "WARNING 2017-4-29: Cannot find configuration file, using defaults.")
+
+INFO 2017-4-29: Starting database connection.
+=> nil
+
+WARNING 2017-4-29: Cannot find configuration file, using defaults.
+=> nil
+
+
+
+; Подключение библиотеки...
+(require '[clojure.core.async :as async])
+
+
+
+; Запуск в новом потоке вывода значений...
+(def thread (Thread. (fn [] (println 1 2 3))))
+
+(.start thread)
+
+
+
+; Создание пула потоков и запуск на выполнение в новом потоке вывода на печать чисел...
+(import 'java.util.concurrent.ExecutorService)
+(import 'java.util.concurrent.Executors)
+
+(def service (Executors/newFixedThreadPool 4))
+
+(def f (.submit ^ExecutorService service
+                ^Callable (fn []
+                            (println 1 2 3))))
+
+(println @f)
+
+
+; Взятие 10 элементов из генератора случайных чисел...
+(take 10 (repeatedly #(rand-int 100)))
+=> (82 8 75 63 85 76 95 50 51 70)
+
+
+
+; Макрос io ! позволяет помечать код, который не должен выполняться внутри транзакции...
+(defn log [s]
+   (io!
+      (println s)))
+
+(log "Hello World") ; succeeds
+
+(dosync (log "Hello World!")) ; throws IllegalStateException
+
+
+
+; Выполнение действий с атомом...
+(defn counter []
+  (let [cnt (atom 0)]
+    {:inc! (fn [] (swap! cnt inc))
+     :dec! (fn [] (swap! cnt dec)) 
+     :get (fn [] @cnt)} ))
+
+(let [cnt (counter)]
+  ((:inc! cnt))
+  ((:inc! cnt)) 
+  ((:get cnt)))
+=> 2
+
+
+
+; Пример работы макроса rand-nth...
+(def food [:ice-cream :steak :apple])
+#'user/food
+
+(rand-nth food)
+:apple
+
+(rand-nth food)
+:ice-cream
+
+
+
+; Пример использования макроса ->...
+(conj (conj (conj [] 1) 2) 3)
+[1 2 3]
+
+; Тоже самое с использованием thread-first(->)...
+(-> []
+          (conj 1)
+          (conj 2)
+          (conj 3))
+[1 2 3]
+
+
+
+; Пример использования макроса thread-last(->>) для применения функции 
+; в первом аргументе к коллекции в последнем.
+; #() - создание анонимной функции...
+user> (->> ["Japan" "China" "Korea"]
+           (map clojure.string/upper-case)
+           (map #(str "Hello " %)))
+("Hello JAPAN!" "Hello CHINA!" "Hello KOREA!")
+
+
+
+; Использование функций из Java...
+(Math/pow 2 3)
+8.0
+
+(let [current_date (new java.util.Date)]
+        (.toString current_date))
+"Sun Jan 15 21:44:06 JST 2017"
+
