@@ -676,3 +676,28 @@ user> (->> ["Japan" "China" "Korea"]
         (.toString current_date))
 "Sun Jan 15 21:44:06 JST 2017"
 
+
+
+; Include async lib...
+(:use '[clojure.core.async :as async])
+
+
+; Define ref...
+(def my-ref (ref 0))
+
+
+; Get value of ref...
+(deref my-ref)
+
+
+; Set value of ref...
+(dosync (ref-set my-ref 1) (ref-set my-ref 4))
+
+
+; Update value by incrementing old value using alter and function,
+; that get current ref and change it.
+; 1 variant.
+(dosync (alter my-ref (fn [current-ref] (inc current-ref))))
+
+; 2 variant...
+(dosync (alter my-ref #(inc %)))
