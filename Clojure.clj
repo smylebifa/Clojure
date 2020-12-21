@@ -1,3 +1,6 @@
+1. Основные компоненты.
+_________________________
+
 ; Присвоение f функции, суммирующей 2 параметра...
 (def f (fn [a b] (+ a b)))
 
@@ -370,6 +373,87 @@ a b 2 [1 2 3 [a b]]
 => ["John" "Smith" "Moscow" "Vadkovsky per"]
 
 
+; Использование функции cycle для создания ленивых бесконечных цикличных последовательностей...
+(take 5 (cycle ["a" "b"]))
+=>("a" "b" "a" "b" "a")
+
+user=> (take 10 (cycle (range 0 3)))
+=>(0 1 2 0 1 2 0 1 2 0)
+
+
+; Multiplies every x by every y...
+(doseq [x [-1 0 1]
+        y [1  2 3]]
+  (prn (* x y)))
+-1
+-2
+-3
+0
+0
+0
+1
+2
+3
+
+
+; Применение функции map для реализации работы...
+(map list [1 2 3] [1 2 3])
+=> ((1 1) (2 2) (3 3))
+
+
+
+; Примеры использования макроса assoc
+(assoc {} :key1 "value" :key2 "another value")
+;;=> {:key2 "another value", :key1 "value"}
+
+;; Here we see an overwrite by a second entry with the same key
+(assoc {:key1 "old value1" :key2 "value2"} 
+        :key1 "value1" :key3 "value3")
+;;=> {:key3 "value3", :key2 "value2", :key1 "value1"}
+
+;; 'assoc' can be used on a vector (but not a list), in this way: 
+;; (assoc vec index replacement)
+(assoc [1 2 3] 0 10)     ;;=> [10 2 3]
+(assoc [1 2 3] 2 '(4 6)) ;;=> [1 2 (4 6)]
+
+
+
+; Пример использования макроса spit для записи в файл, slurp для чтения...
+user=> (spit "flubber.txt" "test")
+nil
+user=> (slurp "flubber.txt")
+"test"
+
+
+
+; Пример использоваемя макроса apply...
+
+(apply str ["str1" "str2" "str3"])  ;;=> "str1str2str3"
+(str "str1" "str2" "str3")          ;;=> "str1str2str3"
+
+(apply max [1 2 3])
+;;=> 3 
+
+;; which is the same as 
+(max 1 2 3)
+;;=> 3
+
+
+
+; Использование функций из Java...
+(Math/pow 2 3)
+8.0
+
+(let [current_date (new java.util.Date)]
+        (.toString current_date))
+"Sun Jan 15 21:44:06 JST 2017"
+
+
+
+
+2. Макросы.
+___________
+
 ; Создание макроса, понимающего обчную, не польскую нотацию...
 (defmacro infix [a oper b] (list oper a b)) (infix 1 + 2)
 => #'user/infix
@@ -402,22 +486,53 @@ a > b
 
 
 
-; Разыменование ссылки(применяется для вызова promise, future).
-; 1 вариант...
-(deref reference)
-
-; 2 вариант, более компактный...
-(@reference)
+; Взятие 10 элементов из генератора случайных чисел...
+(take 10 (repeatedly #(rand-int 100)))
+=> (82 8 75 63 85 76 95 50 51 70)
 
 
 
-; Пример с выполнением future, выбрасывающем исключение...
-(def f (future (throw (Exception. "Hello from the future!")))) 
-(@f)
+; Пример работы макроса rand-nth...
+(def food [:ice-cream :steak :apple])
+#'user/food
 
-Execution error at user/fn (form-init14986200828704233027.clj:1).
-Hello from the future!
+(rand-nth food)
+:apple
 
+(rand-nth food)
+:ice-cream
+
+
+
+
+
+
+
+
+3. Основные объекты для работы с потоками...
+____________________________________________
+
+; Объявление атомического вектора, который позволяет использовать переменную из разных потоков
+; и изменять, при условии, что никто другой ее не изменил(сохраняет предыдущее состояние, т.е. ссылку)...
+(def v (atom []))
+=> #'user/v
+
+; Получаем значение атома(разыменование ссылки).
+; 1 вариант.
+(deref v)
+=> []
+
+; 2 вариант...
+@v
+=> []
+
+; Изменение значения атома...
+(reset! v [1])
+=> [1]
+
+; Добавление значения путем применения функции к атому...
+(swap! v conj 3)
+=> [1 3]
 
 
 ; Применение функции swap для изменения атома...
@@ -427,12 +542,46 @@ Hello from the future!
 
   (swap! myatom inc)
   (println @myatom)) (example)
-
 1
 2
 => #'user/example
 => nil
 
+
+
+; Выполнение действий с атомом...
+(defn counter []
+  (let [cnt (atom 0)]
+    {:inc! (fn [] (swap! cnt inc))
+     :dec! (fn [] (swap! cnt dec)) 
+     :get (fn [] @cnt)} ))
+
+(let [cnt (counter)]
+  ((:inc! cnt))
+  ((:inc! cnt)) 
+  ((:get cnt)))
+=> 2
+
+
+
+; Объявление агента, действия с которым выполняются в отдельном потоке...
+(def a (agent []))
+=> #'user/a
+
+; Изменение значения агента посылается в виде лямбда функции в асинхронном виде...
+(send a conj 3)
+=> #object[clojure.lang.Agent 0x23f60518 {:status :ready, :val [3]}]
+
+
+; Пример добавления к агенту числа 100...
+(def my-agent (agent 100))
+=> #'user/my-agent
+
+(send my-agent + 100)
+=> #object[clojure.lang.Agent 0x194f77b {:status :ready, :val 100}]
+
+(deref my-agent)
+=> 200
 
 
 ; Пример использования агента для вычисления суммирующего значения всех элементов вектора...
@@ -455,48 +604,9 @@ Hello from the future!
 => nil
 
 
-
-; Использование функции cycle для создания ленивых бесконечных цикличных последовательностей...
-(take 5 (cycle ["a" "b"]))
-=>("a" "b" "a" "b" "a")
-
-user=> (take 10 (cycle (range 0 3)))
-=>(0 1 2 0 1 2 0 1 2 0)
-
-
-; Multiplies every x by every y...
-(doseq [x [-1 0 1]
-        y [1  2 3]]
-  (prn (* x y)))
--1
--2
--3
-0
-0
-0
-1
-2
-3
-
-
-; Применение функции map для реализации работы...
-(map list [1 2 3] [1 2 3])
-=> ((1 1) (2 2) (3 3))
-
-
-
-; Использование функции send для агента...
-user=> (def my-agent (agent 100))
-#'user/my-agent
-
-user=> @my-agent
-100
-
-user=> (send my-agent + 100)
-#<Agent@5afc0f5: 200>
-
-user=> @my-agent
-200
+; Используется для блокирующих операций, таких как println...
+(send-off a conj 3)
+=> #object[clojure.lang.Agent 0x75141ca3 {:status :ready, :val []}]
 
 
 ; Пример использования метода wait для ожидания завершения потока или агента.
@@ -513,27 +623,57 @@ user=> @my-agent
 
 
 
-; Примеры использования макроса assoc
-(assoc {} :key1 "value" :key2 "another value")
-;;=> {:key2 "another value", :key1 "value"}
+; Объявление ссылки содержащего значение...
+(def r (ref 0))
+=> #'user/r
 
-;; Here we see an overwrite by a second entry with the same key
-(assoc {:key1 "old value1" :key2 "value2"} 
-        :key1 "value1" :key3 "value3")
-;;=> {:key3 "value3", :key2 "value2", :key1 "value1"}
-
-;; 'assoc' can be used on a vector (but not a list), in this way: 
-;; (assoc vec index replacement)
-(assoc [1 2 3] 0 10)     ;;=> [10 2 3]
-(assoc [1 2 3] 2 '(4 6)) ;;=> [1 2 (4 6)]
+; Изменение значения внутри транзакции...
+(dosync (ref-set r 1))
+=> 1
 
 
+; Изменение переменной с помощью функции(аналогично swap! у атома)...
+(def my-ref (ref 0))
 
-; Пример использования макроса spit для записи в файл, slurp для чтения...
-user=> (spit "flubber.txt" "test")
-nil
-user=> (slurp "flubber.txt")
-"test"
+; 1 вариант.
+(dosync (alter my-ref (fn [current-ref] (inc current-ref))))
+
+; 2 вариант.
+(dosync (alter my-ref #(inc %)))
+
+; 3 вариант...
+(dosync (alter my-ref inc))
+
+
+; Установка значений my-ref внутри транзакции...
+(def my-ref (ref 0))
+
+(dosync (ref-set my-ref 1) (ref-set my-ref 4))
+
+
+
+; Пример работы сервера, удаляющий документы, пользователей, имеющие права доступа к документам...
+(def user (ref #{"user1", "user2", "user3"}))
+(def documents (ref {"doc1" "text1", "doc2" "text2"}))
+(def permissions (ref {"user1" ["doc1", "doc2"], "user2" ["doc1"], "user3" ["doc2"]}))
+
+
+(defn del-user [username]
+  (dosync
+    (alter permissions dissoc username)
+    (alter users disj username)))
+(defn del-doc [docname]
+  (dosync
+    (alter permissions
+           (fn [permissions] (->> permissions
+                                  (map (fn [[k v]]
+                                         [k (->> v (filterv #(not= docname %)))]))
+                                  (into {}))))
+    (alter documents dissoc docname)))
+
+
+(del-doc "doc1") (del-user "user2")
+
 
 
 ; Создание переменной типа volatile...
@@ -541,17 +681,75 @@ user=> (slurp "flubber.txt")
 
 
 
-; Пример использоваемя макроса apply...
 
-(apply str ["str1" "str2" "str3"])  ;;=> "str1str2str3"
-(str "str1" "str2" "str3")          ;;=> "str1str2str3"
 
-(apply max [1 2 3])
-;;=> 3 
 
-;; which is the same as 
-(max 1 2 3)
-;;=> 3
+
+
+
+
+4. Потоки.
+__________
+
+; Подключение библиотеки async...
+(:use '[clojure.core.async :as async])
+
+
+
+; Разыменование ссылки(применяется для вызова promise, future).
+; 1 вариант...
+(deref reference)
+
+; 2 вариант, более компактный...
+(@reference)
+
+
+
+; Объявление объекта future с передачей инструкции для вычисления.
+; Future запустится в отдельном потоке, получение значения будет блокирующей операцией...
+(def f (future (Thread/sleep 1000) (+ 1 2))) 
+(println "f = " @f)
+=> #'user/f
+f =  3
+=> nil
+
+
+; Создание future, выбрасывающего исключение...
+(def f (future (throw (Exception. "Hello from the future!")))) 
+(@f)
+
+Execution error at user/fn (form-init14986200828704233027.clj:1).
+Hello from the future!
+
+
+
+; Реализация работы future на примере суммирования значений...
+(defn long-sum [a b] (Thread/sleep 2000) (+ a b)) 
+(time (let [x (future (long-sum 1 2))
+            y (future (long-sum 3 4))
+            z (future (long-sum 5 6))]
+        (+ @x @y @z)))
+=> #'user/long-sum
+"Elapsed time: 2018.935968 msecs"
+=> 21
+
+
+
+; Реализация работы promise, который получает значение в отдельном потоке.
+; Методы начинаюся с точки, конструкторы заканчиваются ей...
+(def p (promise)) 
+(defn long-sum [a b] (Thread/sleep 2000) (+ a b)) 
+(.start (Thread. (fn [] (deliver p (long-sum 2 2))))) 
+(println "p = " @p)
+=> #'user/p
+=> nil
+=> #'user/long-sum
+p =  4
+=> nil
+
+
+
+
 
 
 
@@ -576,11 +774,6 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 
 
 
-; Подключение библиотеки...
-(require '[clojure.core.async :as async])
-
-
-
 ; Запуск в новом потоке вывода значений...
 (def thread (Thread. (fn [] (println 1 2 3))))
 
@@ -601,11 +794,6 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 (println @f)
 
 
-; Взятие 10 элементов из генератора случайных чисел...
-(take 10 (repeatedly #(rand-int 100)))
-=> (82 8 75 63 85 76 95 50 51 70)
-
-
 
 ; Макрос io ! позволяет помечать код, который не должен выполняться внутри транзакции...
 (defn log [s]
@@ -615,33 +803,6 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 (log "Hello World") ; succeeds
 
 (dosync (log "Hello World!")) ; throws IllegalStateException
-
-
-
-; Выполнение действий с атомом...
-(defn counter []
-  (let [cnt (atom 0)]
-    {:inc! (fn [] (swap! cnt inc))
-     :dec! (fn [] (swap! cnt dec)) 
-     :get (fn [] @cnt)} ))
-
-(let [cnt (counter)]
-  ((:inc! cnt))
-  ((:inc! cnt)) 
-  ((:get cnt)))
-=> 2
-
-
-
-; Пример работы макроса rand-nth...
-(def food [:ice-cream :steak :apple])
-#'user/food
-
-(rand-nth food)
-:apple
-
-(rand-nth food)
-:ice-cream
 
 
 
@@ -665,39 +826,3 @@ user> (->> ["Japan" "China" "Korea"]
            (map clojure.string/upper-case)
            (map #(str "Hello " %)))
 ("Hello JAPAN!" "Hello CHINA!" "Hello KOREA!")
-
-
-
-; Использование функций из Java...
-(Math/pow 2 3)
-8.0
-
-(let [current_date (new java.util.Date)]
-        (.toString current_date))
-"Sun Jan 15 21:44:06 JST 2017"
-
-
-
-; Include async lib...
-(:use '[clojure.core.async :as async])
-
-
-; Define ref...
-(def my-ref (ref 0))
-
-
-; Get value of ref...
-(deref my-ref)
-
-
-; Set value of ref...
-(dosync (ref-set my-ref 1) (ref-set my-ref 4))
-
-
-; Update value by incrementing old value using alter and function,
-; that get current ref and change it.
-; 1 variant.
-(dosync (alter my-ref (fn [current-ref] (inc current-ref))))
-
-; 2 variant...
-(dosync (alter my-ref #(inc %)))
