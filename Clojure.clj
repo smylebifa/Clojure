@@ -749,10 +749,6 @@ p =  4
 
 
 
-
-
-
-
 ; Пример использования блокировки...
 (def log-lock (Object.))
 
@@ -790,7 +786,6 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 (def f (.submit ^ExecutorService service
                 ^Callable (fn []
                             (println 1 2 3))))
-
 (println @f)
 
 
@@ -826,3 +821,167 @@ user> (->> ["Japan" "China" "Korea"]
            (map clojure.string/upper-case)
            (map #(str "Hello " %)))
 ("Hello JAPAN!" "Hello CHINA!" "Hello KOREA!")
+
+
+
+
+
+; Пример подключения и запуска из проекта leiningen кода с применением promise...
+
+; Подключение библиотеки promesa в dependencies.
+[funcool/promesa "1.9.0"]
+
+(ns clojure-intro-future-channels.core
+  (:require [promesa.core :as p]))
+
+(defn long-computation [a b] (Thread/sleep 2000) (+ a b))
+
+; В данном случае promise выполняется в том же потоке...
+(def prom (let [x 1 y 2]
+            (p/promise (fn [resolve fail]
+                         (resolve (long-computation x y))))))
+
+(def prom2 (p/then prom #(println "Completed in callback" %)))
+(println "prom2 = " @prom2)
+
+
+
+; Пример в котором несколько promise выполняются и блокируются при получении результата.
+; Результат использует promise как callback...
+(defn long-computation [a b] (Thread/sleep 2000) (+ a b))
+
+(defn p-long-comp [x y]
+  (p/promise (fn [resolve fail]
+               (future (resolve (long-computation x y))))))
+
+(def prom1 (p-long-comp 1 2))
+(def prom2 (p-long-comp 3 4))
+
+; 1 вариант.
+(def psum (p/promise
+            (fn [resolve fail]
+              (p/then prom1 (fn [result1]
+                              (p/then prom2 (fn [result2]
+                                              (resolve (+ result1 result2)))))))))
+
+; 2 вариант.
+(def psum (p/mapcat (fn [result1] (p/map (fn [result2] (+ result1 result2)) prom2)) prom1))
+
+; 3 вариант.
+(def psum (p/alet [r1 (p/await prom1)
+                   r2 (p/await prom2)]
+                  (+ r1 r2)))
+
+; 4 вариант.
+[promesa.async :as pa]
+(def psum (pa/async (+ (p/await prom1) (p/await prom2))))
+
+
+(println "result = " @psum)
+
+
+
+; Добавление и получение элементов из очереди в отдельных потоках...
+(def queue (ArrayBlockingQueue. 10))
+
+
+(-> (Thread. (fn [] (doseq [x (range 0 10)]
+                      (let [value (str "x" x)]
+                        (println "put" value)
+                        (.put queue value)))))
+    (.start))
+
+(-> (Thread. (fn []
+               (while true (println "taken " (.take queue)))))
+    (.start))
+
+
+; Второй способ для работы с очередью.
+; Позволяет асинхронно с помощью callback функций получать и добавлять значения...
+(defn producer [x]
+  (when (> x 0) (a/put! queue x (fn [_]
+                                  (producer (dec x))))))
+
+(defn consumer []
+  (a/take! queue (fn [r] (println "taken " r)
+                   (when (not= r nil) (consumer)))))
+
+(producer 10)
+(consumer)
+
+
+; Третий способ для работы с очередью...
+(def queue (a/chan 10))
+
+(a/go (doseq [x (range 0 10)]
+        (let [value (str "x" x)]
+          (println (str "put " value))
+          (a/>! queue value))))
+
+(a/go []
+      (while true (println (str "taken " (a/<! queue)))))
+
+
+; Добавляем закрытие канала при добавлении и получении значений.
+; Добавляем символы получения, чтобы не указывать каждый раз namespace...
+[clojure.core.async :refer [>! <!] :as a]
+
+(a/go (doseq [x (range 0 10)]
+        (let [value (str "x" x)]
+          (println (str "put " value))
+          (>! queue value)))
+      (a/close! queue))
+
+(a/<!! (a/go-loop []
+      (when-let [r (<! queue)]
+        (println (str "r = " r))
+        (recur))))
+
+
+
+; Использование нескольих каналов для записи и чтения...
+(def chan1 (a/chan))
+(def chan2 (a/chan))
+(def chan (a/merge [chan1 chan2]))
+
+
+(a/go (doseq [x (range 0 10)]
+        (let [value (str "x" x)]
+          (println (str "put " value))
+          (>! chan1 value)))
+      (a/close! chan1))
+
+(a/go (doseq [y (range 0 10)]
+        (let [value (str "y" y)]
+          (println (str "put " value))
+          (>! chan2 value)))
+      (a/close! chan2))
+
+
+(a/<!! (a/go-loop []
+      (when-let [r (<! chan)]
+        (println (str "r = " r))
+        (recur))))
+
+
+
+; Создание 2 функций - возвращающие канал по переданному вектору 
+; и вектор по полученному в качестве параметра канала...
+(defn vec-to-chan [vec]
+  (let [c (a/chan)]
+    (a/go (doseq [x vec]
+            (>! c x))
+          (a/close! c))
+    c))
+
+(defn chan-to-vec [chan]
+  (a/<!! (a/go-loop [v []]
+           (if-let [r (<! chan)]
+             (do (println "v = " v)
+                 (recur (conj v r)))
+             v)
+           )))
+
+(def c1 (vec-to-chan (range 0 10)))
+
+(println "r = " (chan-to-vec c1))
