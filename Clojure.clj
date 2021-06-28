@@ -450,7 +450,6 @@ user=> (slurp "flubber.txt")
 
 
 
-
 2. Макросы.
 ___________
 
@@ -501,11 +500,6 @@ a > b
 
 (rand-nth food)
 :ice-cream
-
-
-
-
-
 
 
 
@@ -697,7 +691,6 @@ __________
 (@reference)
 
 
-
 ; Объявление объекта future с передачей инструкции для вычисления.
 ; Future запустится в отдельном потоке, получение значения будет блокирующей операцией...
 (def f (future (Thread/sleep 1000) (+ 1 2))) 
@@ -715,7 +708,6 @@ Execution error at user/fn (form-init14986200828704233027.clj:1).
 Hello from the future!
 
 
-
 ; Реализация работы future на примере суммирования значений...
 (defn long-sum [a b] (Thread/sleep 2000) (+ a b)) 
 (time (let [x (future (long-sum 1 2))
@@ -725,7 +717,6 @@ Hello from the future!
 => #'user/long-sum
 "Elapsed time: 2018.935968 msecs"
 => 21
-
 
 
 ; Реализация работы promise, который получает значение в отдельном потоке.
