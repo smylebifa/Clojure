@@ -699,11 +699,13 @@ Hello from the future!
 
 
 Реализация работы future на примере суммирования значений...
+```
 (defn long-sum [a b] (Thread/sleep 2000) (+ a b)) 
 (time (let [x (future (long-sum 1 2))
             y (future (long-sum 3 4))
             z (future (long-sum 5 6))]
         (+ @x @y @z)))
+```
 => #'user/long-sum
 "Elapsed time: 2018.935968 msecs"
 => 21
@@ -711,10 +713,13 @@ Hello from the future!
 
 Реализация работы promise, который получает значение в отдельном потоке.
 Методы начинаюся с точки, конструкторы заканчиваются ей...
+```
 (def p (promise)) 
 (defn long-sum [a b] (Thread/sleep 2000) (+ a b)) 
 (.start (Thread. (fn [] (deliver p (long-sum 2 2))))) 
 (println "p = " @p)
+```
+
 => #'user/p
 => nil
 => #'user/long-sum
@@ -724,11 +729,13 @@ p =  4
 
 
 Пример использования блокировки...
+```
 (def log-lock (Object.))
 
 (defn log [& args]
   (locking log-lock
     (apply println args)))
+```
 
 Thread 1
 (log "INFO 2017-4-29: Starting database connection.")
@@ -745,13 +752,15 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 
 
 Запуск в новом потоке вывода значений...
+```
 (def thread (Thread. (fn [] (println 1 2 3))))
 
 (.start thread)
-
+```
 
 
 Создание пула потоков и запуск на выполнение в новом потоке вывода на печать чисел...
+```
 (import 'java.util.concurrent.ExecutorService)
 (import 'java.util.concurrent.Executors)
 
@@ -761,10 +770,11 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
                 ^Callable (fn []
                             (println 1 2 3))))
 (println @f)
-
+```
 
 
 Макрос io ! позволяет помечать код, который не должен выполняться внутри транзакции...
+```
 (defn log [s]
    (io!
       (println s)))
@@ -772,18 +782,19 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 (log "Hello World") ; succeeds
 
 (dosync (log "Hello World!")) ; throws IllegalStateException
-
+```
 
 
 Пример использования макроса ->...
-(conj (conj (conj [] 1) 2) 3)
+```(conj (conj (conj [] 1) 2) 3)```
 [1 2 3]
 
 Тоже самое с использованием thread-first(->)...
-(-> []
+```(-> []
           (conj 1)
           (conj 2)
           (conj 3))
+```          
 [1 2 3]
 
 
@@ -798,45 +809,58 @@ user> (->> ["Japan" "China" "Korea"]
 
 Пример подключения и запуска из проекта leiningen кода с применением promise...
 Подключение библиотеки promesa в dependencies.
+```
 [funcool/promesa "1.9.0"]
 (ns clojure-intro-future-channels.core
   (:require [promesa.core :as p]))
 (defn long-computation [a b] (Thread/sleep 2000) (+ a b))
+```
 
 В данном случае promise выполняется в том же потоке...
+```
 (def prom (let [x 1 y 2]
             (p/promise (fn [resolve fail]
                          (resolve (long-computation x y))))))
 (def prom2 (p/then prom #(println "Completed in callback" %)))
 (println "prom2 = " @prom2)
+```
 
 Пример в котором несколько promise выполняются и блокируются при получении результата.
 Результат использует promise как callback...
+```
 (defn long-computation [a b] (Thread/sleep 2000) (+ a b))
 (defn p-long-comp [x y]
   (p/promise (fn [resolve fail]
                (future (resolve (long-computation x y))))))
 (def prom1 (p-long-comp 1 2))
 (def prom2 (p-long-comp 3 4))
+```
 
 1 вариант.
+```
 (def psum (p/promise
             (fn [resolve fail]
               (p/then prom1 (fn [result1]
                               (p/then prom2 (fn [result2]
                                               (resolve (+ result1 result2)))))))))
+```
+
 2 вариант.
-(def psum (p/mapcat (fn [result1] (p/map (fn [result2] (+ result1 result2)) prom2)) prom1))
+```(def psum (p/mapcat (fn [result1] (p/map (fn [result2] (+ result1 result2)) prom2)) prom1))```
 
 3 вариант.
+```
 (def psum (p/alet [r1 (p/await prom1)
                    r2 (p/await prom2)]
                   (+ r1 r2)))
+```
 4 вариант.
+```
 [promesa.async :as pa]
 (def psum (pa/async (+ (p/await prom1) (p/await prom2))))
 (println "result = " @psum)
-Добавление и получение элементов из очереди в отдельных потоках...
+
+; Добавление и получение элементов из очереди в отдельных потоках...
 (def queue (ArrayBlockingQueue. 10))
 (-> (Thread. (fn [] (doseq [x (range 0 10)]
                       (let [value (str "x" x)]
@@ -846,9 +870,11 @@ user> (->> ["Japan" "China" "Korea"]
 (-> (Thread. (fn []
                (while true (println "taken " (.take queue)))))
     (.start))
+```
 
 Второй способ для работы с очередью.
 Позволяет асинхронно с помощью callback функций получать и добавлять значения...
+```
 (defn producer [x]
   (when (> x 0) (a/put! queue x (fn [_]
                                   (producer (dec x))))))
@@ -857,7 +883,9 @@ user> (->> ["Japan" "China" "Korea"]
                    (when (not= r nil) (consumer)))))
 (producer 10)
 (consumer)
+```
 Третий способ для работы с очередью...
+```
 (def queue (a/chan 10))
 (a/go (doseq [x (range 0 10)]
         (let [value (str "x" x)]
@@ -865,9 +893,11 @@ user> (->> ["Japan" "China" "Korea"]
           (a/>! queue value))))
 (a/go []
       (while true (println (str "taken " (a/<! queue)))))
+```
 
 Добавляем закрытие канала при добавлении и получении значений.
 Добавляем символы получения, чтобы не указывать каждый раз namespace...
+```
 [clojure.core.async :refer [>! <!] :as a]
 (a/go (doseq [x (range 0 10)]
         (let [value (str "x" x)]
@@ -878,8 +908,10 @@ user> (->> ["Japan" "China" "Korea"]
       (when-let [r (<! queue)]
         (println (str "r = " r))
         (recur))))
+```
 
 Использование нескольих каналов для записи и чтения...
+```
 (def chan1 (a/chan))
 (def chan2 (a/chan))
 (def chan (a/merge [chan1 chan2]))
@@ -897,9 +929,11 @@ user> (->> ["Japan" "China" "Korea"]
       (when-let [r (<! chan)]
         (println (str "r = " r))
         (recur))))
+```
 
 Создание 2 функций - возвращающие канал по переданному вектору 
 и вектор по полученному в качестве параметра канала...
+```
 (defn vec-to-chan [vec]
   (let [c (a/chan)]
     (a/go (doseq [x vec]
@@ -915,3 +949,4 @@ user> (->> ["Japan" "China" "Korea"]
            )))
 (def c1 (vec-to-chan (range 0 10)))
 (println "r = " (chan-to-vec c1))
+```
