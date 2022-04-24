@@ -203,25 +203,25 @@ Yes, если условие выполняется, No в обратном сл
 (reduce conj () [1 2 3 4 5])
 => (5 4 3 2 1)
 
-; Функция map выводит списки элементов от 0 до i, получая i из каждого элемента вектора...
+Функция map выводит списки элементов от 0 до i, получая i из каждого элемента вектора...
 (map (fn [i] (range 0 i)) [1 2 3 4 5])
 ((0) (0 1) (0 1 2) (0 1 2 3) (0 1 2 3 4))
 
-; Функция mapcat применяет функцию map и затем склеивает результат в один список...
+Функция mapcat применяет функцию map и затем склеивает результат в один список...
 (mapcat (fn [i] (range 0 i)) [1 2 3 4 5])
 => (0 0 1 0 1 2 0 1 2 3 0 1 2 3 4)
 
-; Получение из списка строк их количества, сравнение больше ли оно 2,
-; если да, то складываем количество каждой такой строки и выводим эту сумму.
-; 1 вариант...
+Получение из списка строк их количества, сравнение больше ли оно 2,
+если да, то складываем количество каждой такой строки и выводим эту сумму.
+1 вариант...
 (reduce + (filter #(> % 2) (map count ["asdfgasd" "as" "asdasf" "a" "sdfv"]))) 
 => 18
 
-; 2 вариант...
+2 вариант...
 (->> ["asdfgasd" "as" "asdasf" "a" "sdfv"] (map count) (filter #(> % 2)) (reduce +))
 => 18
 
-; Пример с использованием for чтобы вывести с списке количество символов переданного вектора строк...
+Пример с использованием for чтобы вывести с списке количество символов переданного вектора строк...
 (for [str ["asdfgasd" "as" "asdasf" "a" "sdfv"] 
       :let [l (count str)]
       :when (> l 2)] 
@@ -229,42 +229,42 @@ Yes, если условие выполняется, No в обратном сл
 => (8 6 4)
 
 
-; Применение объдинения элементов из векторов каждый с каждым...
+Применение объдинения элементов из векторов каждый с каждым...
 (for [x [1 2 3] y [4 5 6]] [x y])
 => ([1 4] [1 5] [1 6] [2 4] [2 5] [2 6] [3 4] [3 5] [3 6])
 
 
-; Функция distinct позволяет получать различающиеся строки из всех выбранных...
+Функция distinct позволяет получать различающиеся строки из всех выбранных...
 (distinct ["a" "a" "asda" "df" "asd" "df"])
 => ("a" "asda" "df" "asd")
 
 
-; Создание функции с добавлением документации, предопределенными параметрами,
-; проверяющими являются ли они числами(предысуловием) и постусловием, 
-; проверяющим результат выполнения функции, является ли он числом...
+Создание функции с добавлением документации, предопределенными параметрами,
+проверяющими являются ли они числами(предысуловием) и постусловием, 
+проверяющим результат выполнения функции, является ли он числом...
 (defn sum "Return sum of parameters" 
   [a b] 
   {:pre [(number? a) (number? b)]
    :post [(number? %)]} (+ a b))
 => #'user/sum
 
-; Просмотр документации по функции sum...
+Просмотр документации по функции sum...
 (doc sum)
--------------------------
+
 user/sum
 ([a b])
   Return sum of parameters
 => nil
 
 
-; Добавляем тип для параметра, для вывода ошибка в случае переданного не соответствующего ему типа, 
-; также вызываем функцию из Java и получаем индекс входной подстроки...
+Добавляем тип для параметра, для вывода ошибка в случае переданного не соответствующего ему типа, 
+также вызываем функцию из Java и получаем индекс входной подстроки...
 (defn func [^String str] (.indexOf str "abc")) (func "bdnabc")
 => #'user/func
 => 3
 
 
-; Создание функции, которая может принимать разное количество параметров, в данном случае 2 или 3...
+Создание функции, которая может принимать разное количество параметров, в данном случае 2 или 3...
 (defn sum 
   ([a b] (+ a b))
   ([a b c] (+ a b c)))
@@ -275,8 +275,8 @@ user/sum
 
 
 
-; Принимает любое количество параметров в форме списка и вычисляет их сумму.
-; 1 вариант...
+Принимает любое количество параметров в форме списка и вычисляет их сумму.
+1 вариант...
 (defn sum
   ([a b] (+ a b))
   ([a b c] ( + a b c))
@@ -287,7 +287,7 @@ user/sum
 => 26
 
 
-; 2 вариант...
+2 вариант...
 (defn sum
   ([a b] (+ a b))
   ([a b c] ( + a b c))
@@ -296,7 +296,7 @@ user/sum
 (sum 1 3 4 5 6 7)
 => 26
 
-; 3 вариант...
+3 вариант...
 (defn sum
   [& elements] (apply + elements))
 => #'user/sum
@@ -305,7 +305,7 @@ user/sum
 
 
 
-; Деструктурирование вектора, _ служит для пропуска параметра...
+Деструктурирование вектора, _ служит для пропуска параметра...
 (def v [1 2 3 4 5])
 => #'user/v
 
@@ -314,21 +314,21 @@ user/sum
 a = 1 b = 3
 => nil
 
-; Вложенное деструктурирование...
+Вложенное деструктурирование...
 (let [[n1 n2 n3 [str1 str2]] [1 2 3 ["a" "b"]]]
   (println str1 str2 n2))
 a b 2
 => nil
 
 
-; Вывод деструктурированных параметров, в том числе всего списка в виде переменной full...
+Вывод деструктурированных параметров, в том числе всего списка в виде переменной full...
 (let [[n1 n2 n3 [str1 str2] :as full] [1 2 3 ["a" "b"]]]
   (println str1 str2 n2 full))
 a b 2 [1 2 3 [a b]]
 => nil
 
 
-; Работа с map, получение значения по ключу...
+Работа с map, получение значения по ключу...
 (def john {:name "John" :surname "Smith"})
 => #'user/john
 
@@ -336,26 +336,26 @@ a b 2 [1 2 3 [a b]]
 => "John"
 
 
-; Деструктурирование ассоц. массива и вывод в виде вектора.
-; 1 вариант...
+Деструктурирование ассоц. массива и вывод в виде вектора.
+1 вариант...
 (let [{name :name surname :surname} john] [name surname])
 => ["John" "Smith"]
 
-; 2 вариант для ключей...
+2 вариант для ключей...
 (let [{:keys [name surname]} john] [name surname])
 => ["John" "Smith"]
 
-; 2 вариант для строк...
+2 вариант для строк...
 (let [{:strs [name surname]} {"name" "John" "surname" "Smith"}] [name surname])
 => ["John" "Smith"]
 
 
-; Задание значения age по умолчанию равным 20...
+Задание значения age по умолчанию равным 20...
 (let [{:strs [name surname age] :or {age 20}} {"name" "John" "surname" "Smith"} ] [name surname age])
 => ["John" "Smith" 20]
 
 
-; Деструктурирование вложенного ассоциативного массива ...
+Деструктурирование вложенного ассоциативного массива ...
 (def john {:name "John" :surname "Smith" :address {:city "Moscow" :street "Vadkovsky per"}})
 => #'user/john
 
@@ -363,7 +363,7 @@ a b 2 [1 2 3 [a b]]
 => ["John" "Smith" "Moscow" "Vadkovsky per"]
 
 
-; Использование функции cycle для создания ленивых бесконечных цикличных последовательностей...
+Использование функции cycle для создания ленивых бесконечных цикличных последовательностей...
 (take 5 (cycle ["a" "b"]))
 =>("a" "b" "a" "b" "a")
 
@@ -371,7 +371,7 @@ user=> (take 10 (cycle (range 0 3)))
 =>(0 1 2 0 1 2 0 1 2 0)
 
 
-; Multiplies every x by every y...
+Multiplies every x by every y...
 (doseq [x [-1 0 1]
         y [1  2 3]]
   (prn (* x y)))
@@ -386,29 +386,29 @@ user=> (take 10 (cycle (range 0 3)))
 3
 
 
-; Применение функции map для реализации работы...
+Применение функции map для реализации работы...
 (map list [1 2 3] [1 2 3])
 => ((1 1) (2 2) (3 3))
 
 
 
-; Примеры использования макроса assoc
+Примеры использования макроса assoc
 (assoc {} :key1 "value" :key2 "another value")
-;;=> {:key2 "another value", :key1 "value"}
+=> {:key2 "another value", :key1 "value"}
 
-;; Here we see an overwrite by a second entry with the same key
+ Here we see an overwrite by a second entry with the same key
 (assoc {:key1 "old value1" :key2 "value2"} 
         :key1 "value1" :key3 "value3")
-;;=> {:key3 "value3", :key2 "value2", :key1 "value1"}
+=> {:key3 "value3", :key2 "value2", :key1 "value1"}
 
-;; 'assoc' can be used on a vector (but not a list), in this way: 
-;; (assoc vec index replacement)
+'assoc' can be used on a vector (but not a list), in this way: 
+(assoc vec index replacement)
 (assoc [1 2 3] 0 10)     ;;=> [10 2 3]
 (assoc [1 2 3] 2 '(4 6)) ;;=> [1 2 (4 6)]
 
 
 
-; Пример использования макроса spit для записи в файл, slurp для чтения...
+Пример использования макроса spit для записи в файл, slurp для чтения...
 user=> (spit "flubber.txt" "test")
 nil
 user=> (slurp "flubber.txt")
@@ -416,21 +416,21 @@ user=> (slurp "flubber.txt")
 
 
 
-; Пример использоваемя макроса apply...
+Пример использоваемя макроса apply...
 
 (apply str ["str1" "str2" "str3"])  ;;=> "str1str2str3"
 (str "str1" "str2" "str3")          ;;=> "str1str2str3"
 
 (apply max [1 2 3])
-;;=> 3 
+=> 3 
 
-;; which is the same as 
+which is the same as 
 (max 1 2 3)
-;;=> 3
+=> 3
 
 
 
-; Использование функций из Java...
+Использование функций из Java...
 (Math/pow 2 3)
 8.0
 
@@ -706,8 +706,8 @@ Hello from the future!
 => 21
 
 
-; Реализация работы promise, который получает значение в отдельном потоке.
-; Методы начинаюся с точки, конструкторы заканчиваются ей...
+Реализация работы promise, который получает значение в отдельном потоке.
+Методы начинаюся с точки, конструкторы заканчиваются ей...
 (def p (promise)) 
 (defn long-sum [a b] (Thread/sleep 2000) (+ a b)) 
 (.start (Thread. (fn [] (deliver p (long-sum 2 2))))) 
@@ -720,17 +720,17 @@ p =  4
 
 
 
-; Пример использования блокировки...
+Пример использования блокировки...
 (def log-lock (Object.))
 
 (defn log [& args]
   (locking log-lock
     (apply println args)))
 
-;; Thread 1
+Thread 1
 (log "INFO 2017-4-29: Starting database connection.")
 
-;; Thread 2
+Thread 2
 (log "WARNING 2017-4-29: Cannot find configuration file, using defaults.")
 
 INFO 2017-4-29: Starting database connection.
@@ -741,14 +741,14 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 
 
 
-; Запуск в новом потоке вывода значений...
+Запуск в новом потоке вывода значений...
 (def thread (Thread. (fn [] (println 1 2 3))))
 
 (.start thread)
 
 
 
-; Создание пула потоков и запуск на выполнение в новом потоке вывода на печать чисел...
+Создание пула потоков и запуск на выполнение в новом потоке вывода на печать чисел...
 (import 'java.util.concurrent.ExecutorService)
 (import 'java.util.concurrent.Executors)
 
@@ -761,7 +761,7 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 
 
 
-; Макрос io ! позволяет помечать код, который не должен выполняться внутри транзакции...
+Макрос io ! позволяет помечать код, который не должен выполняться внутри транзакции...
 (defn log [s]
    (io!
       (println s)))
@@ -772,11 +772,11 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 
 
 
-; Пример использования макроса ->...
+Пример использования макроса ->...
 (conj (conj (conj [] 1) 2) 3)
 [1 2 3]
 
-; Тоже самое с использованием thread-first(->)...
+Тоже самое с использованием thread-first(->)...
 (-> []
           (conj 1)
           (conj 2)
@@ -785,50 +785,55 @@ WARNING 2017-4-29: Cannot find configuration file, using defaults.
 
 
 
-; Пример использования макроса thread-last(->>) для применения функции 
-; в первом аргументе к коллекции в последнем.
-; #() - создание анонимной функции...
+Пример использования макроса thread-last(->>) для применения функции 
+в первом аргументе к коллекции в последнем.
+#() - создание анонимной функции...
 user> (->> ["Japan" "China" "Korea"]
            (map clojure.string/upper-case)
            (map #(str "Hello " %)))
 ("Hello JAPAN!" "Hello CHINA!" "Hello KOREA!")
-; Пример подключения и запуска из проекта leiningen кода с применением promise...
-; Подключение библиотеки promesa в dependencies.
+
+Пример подключения и запуска из проекта leiningen кода с применением promise...
+Подключение библиотеки promesa в dependencies.
 [funcool/promesa "1.9.0"]
 (ns clojure-intro-future-channels.core
   (:require [promesa.core :as p]))
 (defn long-computation [a b] (Thread/sleep 2000) (+ a b))
-; В данном случае promise выполняется в том же потоке...
+
+В данном случае promise выполняется в том же потоке...
 (def prom (let [x 1 y 2]
             (p/promise (fn [resolve fail]
                          (resolve (long-computation x y))))))
 (def prom2 (p/then prom #(println "Completed in callback" %)))
 (println "prom2 = " @prom2)
-; Пример в котором несколько promise выполняются и блокируются при получении результата.
-; Результат использует promise как callback...
+
+Пример в котором несколько promise выполняются и блокируются при получении результата.
+Результат использует promise как callback...
 (defn long-computation [a b] (Thread/sleep 2000) (+ a b))
 (defn p-long-comp [x y]
   (p/promise (fn [resolve fail]
                (future (resolve (long-computation x y))))))
 (def prom1 (p-long-comp 1 2))
 (def prom2 (p-long-comp 3 4))
-; 1 вариант.
+
+1 вариант.
 (def psum (p/promise
             (fn [resolve fail]
               (p/then prom1 (fn [result1]
                               (p/then prom2 (fn [result2]
                                               (resolve (+ result1 result2)))))))))
-; 2 вариант.
+2 вариант.
 (def psum (p/mapcat (fn [result1] (p/map (fn [result2] (+ result1 result2)) prom2)) prom1))
-; 3 вариант.
+
+3 вариант.
 (def psum (p/alet [r1 (p/await prom1)
                    r2 (p/await prom2)]
                   (+ r1 r2)))
-; 4 вариант.
+4 вариант.
 [promesa.async :as pa]
 (def psum (pa/async (+ (p/await prom1) (p/await prom2))))
 (println "result = " @psum)
-; Добавление и получение элементов из очереди в отдельных потоках...
+Добавление и получение элементов из очереди в отдельных потоках...
 (def queue (ArrayBlockingQueue. 10))
 (-> (Thread. (fn [] (doseq [x (range 0 10)]
                       (let [value (str "x" x)]
@@ -838,8 +843,9 @@ user> (->> ["Japan" "China" "Korea"]
 (-> (Thread. (fn []
                (while true (println "taken " (.take queue)))))
     (.start))
-; Второй способ для работы с очередью.
-; Позволяет асинхронно с помощью callback функций получать и добавлять значения...
+
+Второй способ для работы с очередью.
+Позволяет асинхронно с помощью callback функций получать и добавлять значения...
 (defn producer [x]
   (when (> x 0) (a/put! queue x (fn [_]
                                   (producer (dec x))))))
@@ -848,7 +854,7 @@ user> (->> ["Japan" "China" "Korea"]
                    (when (not= r nil) (consumer)))))
 (producer 10)
 (consumer)
-; Третий способ для работы с очередью...
+Третий способ для работы с очередью...
 (def queue (a/chan 10))
 (a/go (doseq [x (range 0 10)]
         (let [value (str "x" x)]
@@ -856,8 +862,9 @@ user> (->> ["Japan" "China" "Korea"]
           (a/>! queue value))))
 (a/go []
       (while true (println (str "taken " (a/<! queue)))))
-; Добавляем закрытие канала при добавлении и получении значений.
-; Добавляем символы получения, чтобы не указывать каждый раз namespace...
+
+Добавляем закрытие канала при добавлении и получении значений.
+Добавляем символы получения, чтобы не указывать каждый раз namespace...
 [clojure.core.async :refer [>! <!] :as a]
 (a/go (doseq [x (range 0 10)]
         (let [value (str "x" x)]
@@ -868,7 +875,8 @@ user> (->> ["Japan" "China" "Korea"]
       (when-let [r (<! queue)]
         (println (str "r = " r))
         (recur))))
-; Использование нескольих каналов для записи и чтения...
+
+Использование нескольих каналов для записи и чтения...
 (def chan1 (a/chan))
 (def chan2 (a/chan))
 (def chan (a/merge [chan1 chan2]))
@@ -886,8 +894,9 @@ user> (->> ["Japan" "China" "Korea"]
       (when-let [r (<! chan)]
         (println (str "r = " r))
         (recur))))
-; Создание 2 функций - возвращающие канал по переданному вектору 
-; и вектор по полученному в качестве параметра канала...
+
+Создание 2 функций - возвращающие канал по переданному вектору 
+и вектор по полученному в качестве параметра канала...
 (defn vec-to-chan [vec]
   (let [c (a/chan)]
     (a/go (doseq [x vec]
