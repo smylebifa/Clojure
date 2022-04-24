@@ -422,9 +422,11 @@ user=> (take 10 (cycle (range 0 3)))
 
 
 Multiplies every x by every y...
+```
 (doseq [x [-1 0 1]
         y [1  2 3]]
   (prn (* x y)))
+```
 -1
 -2
 -3
@@ -437,25 +439,30 @@ Multiplies every x by every y...
 
 
 Применение функции map для реализации работы...
+```
 (map list [1 2 3] [1 2 3])
+```
 => ((1 1) (2 2) (3 3))
 
 
 
 Примеры использования макроса assoc
-(assoc {} :key1 "value" :key2 "another value")
+```(assoc {} :key1 "value" :key2 "another value")```
 => {:key2 "another value", :key1 "value"}
 
- Here we see an overwrite by a second entry with the same key
+Here we see an overwrite by a second entry with the same key
+```
 (assoc {:key1 "old value1" :key2 "value2"} 
         :key1 "value1" :key3 "value3")
+```
 => {:key3 "value3", :key2 "value2", :key1 "value1"}
 
 'assoc' can be used on a vector (but not a list), in this way: 
 (assoc vec index replacement)
+```
 (assoc [1 2 3] 0 10)     ;;=> [10 2 3]
 (assoc [1 2 3] 2 '(4 6)) ;;=> [1 2 (4 6)]
-
+```
 
 
 Пример использования макроса spit для записи в файл, slurp для чтения...
@@ -468,6 +475,7 @@ user=> (slurp "flubber.txt")
 
 Пример использоваемя макроса apply...
 
+```
 (apply str ["str1" "str2" "str3"])  ;;=> "str1str2str3"
 (str "str1" "str2" "str3")          ;;=> "str1str2str3"
 
@@ -477,15 +485,17 @@ user=> (slurp "flubber.txt")
 which is the same as 
 (max 1 2 3)
 => 3
-
+```
 
 
 Использование функций из Java...
-(Math/pow 2 3)
+```(Math/pow 2 3)```
 8.0
 
+```
 (let [current_date (new java.util.Date)]
         (.toString current_date))
+```
 "Sun Jan 15 21:44:06 JST 2017"
 
 
@@ -493,31 +503,39 @@ which is the same as
 ## Макросы.
 
 Создание макроса, понимающего обчную, не польскую нотацию...
+```
 (defmacro infix [a oper b] (list oper a b)) (infix 1 + 2)
+```
 => #'user/infix
 => 3
 
 
 Написание макроса с обратным условием...
+```
 (defmacro unless [expression then else]
   (list 'if test else then)) (unless (> 5 2) (println "a < b") (println "a > b"))
+```  
 => #'user/unless
 a > b
 
 
 
 Представление выражения в виде кода...
+```
 (defmacro unless [expression then else]
   `(if test else then)) 
 '(unless (> 5 2) (println "a < b") (println "a > b"))
+```
 => #'user/unless
 => (unless (> 5 2) (println "a < b") (println "a > b"))
 
 
 ~ Выступает в качестве параметра...
+```
 (defmacro unless [expression then else]
   `(if ~test ~else ~then)) 
 (unless (> 5 2) (println "a < b") (println "a > b"))
+```
 => #'user/unless
 a > b
 => nil
@@ -525,19 +543,21 @@ a > b
 
 
 Взятие 10 элементов из генератора случайных чисел...
+```
 (take 10 (repeatedly #(rand-int 100)))
+```
 => (82 8 75 63 85 76 95 50 51 70)
 
 
 
 Пример работы макроса rand-nth...
-(def food [:ice-cream :steak :apple])
+```(def food [:ice-cream :steak :apple])```
 #'user/food
 
-(rand-nth food)
+```(rand-nth food)```
 :apple
 
-(rand-nth food)
+```(rand-nth food)```
 :ice-cream
 
 
@@ -546,34 +566,36 @@ a > b
 
 Объявление атомического вектора, который позволяет использовать переменную из разных потоков
 и изменять, при условии, что никто другой ее не изменил(сохраняет предыдущее состояние, т.е. ссылку)...
-(def v (atom []))
+```(def v (atom []))```
 => #'user/v
 
 Получаем значение атома(разыменование ссылки).
 1 вариант.
-(deref v)
+```(deref v)```
 => []
 
 2 вариант...
-@v
+```@v```
 => []
 
 Изменение значения атома...
-(reset! v [1])
+```(reset! v [1])```
 => [1]
 
 Добавление значения путем применения функции к атому...
-(swap! v conj 3)
+```(swap! v conj 3)```
 => [1 3]
 
 
 Применение функции swap для изменения атома...
+```
 (defn example []
   (def myatom (atom 1))
   (println @myatom)
 
   (swap! myatom inc)
   (println @myatom)) (example)
+```
 1
 2
 => #'user/example
@@ -582,6 +604,7 @@ a > b
 
 
 Выполнение действий с атомом...
+```
 (defn counter []
   (let [cnt (atom 0)]
     {:inc! (fn [] (swap! cnt inc))
@@ -592,42 +615,46 @@ a > b
   ((:inc! cnt))
   ((:inc! cnt)) 
   ((:get cnt)))
+```
 => 2
 
 
 
 Объявление агента, действия с которым выполняются в отдельном потоке...
-(def a (agent []))
+```(def a (agent []))```
 => #'user/a
 
-; Изменение значения агента посылается в виде лямбда функции в асинхронном виде...
-(send a conj 3)
+Изменение значения агента посылается в виде лямбда функции в асинхронном виде...
+```(send a conj 3)```
 => #object[clojure.lang.Agent 0x23f60518 {:status :ready, :val [3]}]
 
 
 Пример добавления к агенту числа 100...
-(def my-agent (agent 100))
+```(def my-agent (agent 100))```
 => #'user/my-agent
 
-(send my-agent + 100)
+```(send my-agent + 100)```
 => #object[clojure.lang.Agent 0x194f77b {:status :ready, :val 100}]
 
-(deref my-agent)
+```(deref my-agent)```
 => 200
 
 
 Пример использования агента для вычисления суммирующего значения всех элементов вектора...
+```
 (def sum (agent 0)) 
 (def numbers [0 9 3 4 5 5 4 44 4 2 5 6 7 775])
 
 (doseq [x numbers]
   (send sum + x))
+```
 
 Ожидание пока не выполнятся действия с sum...
+```
 (await sum)
 
 (println @sum)
-
+```
 => #'user/sum
 => #'user/numbers
 => nil
@@ -637,54 +664,59 @@ a > b
 
 
 Используется для блокирующих операций, таких как println...
-(send-off a conj 3)
+```(send-off a conj 3)```
 => #object[clojure.lang.Agent 0x75141ca3 {:status :ready, :val []}]
 
 
 Пример использования метода wait для ожидания завершения потока или агента.
 Макрос send отправляет действие агенту...
+```
 (def agnt (agent {}))
 
 (send-off agnt (fn [state] 
                (Thread/sleep 10000)
                (assoc state :done true)))
+```               
 => <Agent@5db18235: {}>
 
+```
 (await agnt)
+```
 => nil
 
 
 
 Объявление ссылки содержащего значение...
-(def r (ref 0))
+```(def r (ref 0))```
 => #'user/r
 
 Изменение значения внутри транзакции...
-(dosync (ref-set r 1))
+```(dosync (ref-set r 1))```
 => 1
 
 
 Изменение переменной с помощью функции(аналогично swap! у атома)...
-(def my-ref (ref 0))
+```(def my-ref (ref 0))```
 
 1 вариант.
-(dosync (alter my-ref (fn [current-ref] (inc current-ref))))
+```(dosync (alter my-ref (fn [current-ref] (inc current-ref))))```
 
 2 вариант.
-(dosync (alter my-ref #(inc %)))
+```(dosync (alter my-ref #(inc %)))```
 
 3 вариант...
-(dosync (alter my-ref inc))
+```(dosync (alter my-ref inc))```
 
 
 Установка значений my-ref внутри транзакции...
-(def my-ref (ref 0))
+```(def my-ref (ref 0))```
 
-(dosync (ref-set my-ref 1) (ref-set my-ref 4))
+```(dosync (ref-set my-ref 1) (ref-set my-ref 4))```
 
 
 
 Пример работы сервера, удаляющий документы, пользователей, имеющие права доступа к документам...
+```
 (def user (ref #{"user1", "user2", "user3"}))
 (def documents (ref {"doc1" "text1", "doc2" "text2"}))
 (def permissions (ref {"user1" ["doc1", "doc2"], "user2" ["doc1"], "user3" ["doc2"]}))
@@ -705,41 +737,45 @@ a > b
 
 
 (del-doc "doc1") (del-user "user2")
-
+```
 
 
 Создание переменной типа volatile...
-(def keep-running? (volatile! true))
+```(def keep-running? (volatile! true))```
 
 
 
 ## Потоки
 
 Подключение библиотеки async...
-(:use '[clojure.core.async :as async])
+```(:use '[clojure.core.async :as async])```
 
 
 
 Разыменование ссылки(применяется для вызова promise, future).
 1 вариант...
-(deref reference)
+```(deref reference)```
 
 2 вариант, более компактный...
-(@reference)
+```(@reference)```
 
 
 Объявление объекта future с передачей инструкции для вычисления.
 Future запустится в отдельном потоке, получение значения будет блокирующей операцией...
+```
 (def f (future (Thread/sleep 1000) (+ 1 2))) 
 (println "f = " @f)
+```
 => #'user/f
 f =  3
 => nil
 
 
 Создание future, выбрасывающего исключение...
+```
 (def f (future (throw (Exception. "Hello from the future!")))) 
 (@f)
+```
 
 Execution error at user/fn (form-init14986200828704233027.clj:1).
 Hello from the future!
