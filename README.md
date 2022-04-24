@@ -245,14 +245,16 @@ Yes, если условие выполняется, No в обратном сл
 Создание функции с добавлением документации, предопределенными параметрами,
 проверяющими являются ли они числами(предысуловием) и постусловием, 
 проверяющим результат выполнения функции, является ли он числом...
+```
 (defn sum "Return sum of parameters" 
   [a b] 
   {:pre [(number? a) (number? b)]
    :post [(number? %)]} (+ a b))
+```
 => #'user/sum
 
 Просмотр документации по функции sum...
-(doc sum)
+```(doc sum)```
 
 user/sum
 ([a b])
@@ -262,17 +264,23 @@ user/sum
 
 Добавляем тип для параметра, для вывода ошибка в случае переданного не соответствующего ему типа, 
 также вызываем функцию из Java и получаем индекс входной подстроки...
-(defn func [^String str] (.indexOf str "abc")) (func "bdnabc")
+```(defn func [^String str] (.indexOf str "abc")) (func "bdnabc")```
 => #'user/func
 => 3
 
 
 Создание функции, которая может принимать разное количество параметров, в данном случае 2 или 3...
+```
 (defn sum 
   ([a b] (+ a b))
   ([a b c] (+ a b c)))
+```
+
 => #'user/sum
+
+```
 (sum 1 4) (sum 1 4 5)
+```
 => 5
 => 10
 
@@ -280,93 +288,132 @@ user/sum
 
 Принимает любое количество параметров в форме списка и вычисляет их сумму.
 1 вариант...
+```
 (defn sum
   ([a b] (+ a b))
   ([a b c] ( + a b c))
   ([a b c & rest] (reduce + (+ a b c) rest)))
+```
 => #'user/sum
 
+```
 (sum 1 3 4 5 6 7)
+```
 => 26
 
 
 2 вариант...
+```
 (defn sum
   ([a b] (+ a b))
   ([a b c] ( + a b c))
   ([a b c & rest] (apply + a b c rest)))
+```
 => #'user/sum
+
+```
 (sum 1 3 4 5 6 7)
+```
 => 26
 
 3 вариант...
+```
 (defn sum
   [& elements] (apply + elements))
+```
 => #'user/sum
+
+```
 (sum 1 3 4 5 6 7)
+```
 => 26
 
 
 
 Деструктурирование вектора, _ служит для пропуска параметра...
+```
 (def v [1 2 3 4 5])
+```
 => #'user/v
 
+```
 (let [[a _ b] v]
   (println "a =" a "b =" b))
+```
 a = 1 b = 3
 => nil
 
 Вложенное деструктурирование...
+```
 (let [[n1 n2 n3 [str1 str2]] [1 2 3 ["a" "b"]]]
   (println str1 str2 n2))
+```
 a b 2
 => nil
 
 
 Вывод деструктурированных параметров, в том числе всего списка в виде переменной full...
+```
 (let [[n1 n2 n3 [str1 str2] :as full] [1 2 3 ["a" "b"]]]
   (println str1 str2 n2 full))
+```
 a b 2 [1 2 3 [a b]]
 => nil
 
 
 Работа с map, получение значения по ключу...
+```
 (def john {:name "John" :surname "Smith"})
+```
 => #'user/john
 
+```
 (let [p john] (:name p))
+```
 => "John"
 
 
 Деструктурирование ассоц. массива и вывод в виде вектора.
 1 вариант...
+```
 (let [{name :name surname :surname} john] [name surname])
+```
 => ["John" "Smith"]
 
 2 вариант для ключей...
+```
 (let [{:keys [name surname]} john] [name surname])
+```
 => ["John" "Smith"]
 
 2 вариант для строк...
+```
 (let [{:strs [name surname]} {"name" "John" "surname" "Smith"}] [name surname])
+```
 => ["John" "Smith"]
 
 
 Задание значения age по умолчанию равным 20...
+```
 (let [{:strs [name surname age] :or {age 20}} {"name" "John" "surname" "Smith"} ] [name surname age])
+```
 => ["John" "Smith" 20]
 
 
 Деструктурирование вложенного ассоциативного массива ...
+```
 (def john {:name "John" :surname "Smith" :address {:city "Moscow" :street "Vadkovsky per"}})
+```
 => #'user/john
 
+```
 (let [{:keys [name surname] {:keys [city street]} :address} john] [name surname city street])
+```
 => ["John" "Smith" "Moscow" "Vadkovsky per"]
 
 
 Использование функции cycle для создания ленивых бесконечных цикличных последовательностей...
+```
 (take 5 (cycle ["a" "b"]))
 =>("a" "b" "a" "b" "a")
 
