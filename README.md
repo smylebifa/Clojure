@@ -954,7 +954,9 @@ user> (->> ["Japan" "China" "Korea"]
 ```
 
 2 вариант.
-```(def psum (p/mapcat (fn [result1] (p/map (fn [result2] (+ result1 result2)) prom2)) prom1))```
+```
+(def psum (p/mapcat (fn [result1] (p/map (fn [result2] (+ result1 result2)) prom2)) prom1))
+```
 
 3 вариант.
 ```
@@ -962,6 +964,7 @@ user> (->> ["Japan" "China" "Korea"]
                    r2 (p/await prom2)]
                   (+ r1 r2)))
 ```
+
 4 вариант.
 ```
 [promesa.async :as pa]
@@ -992,6 +995,7 @@ user> (->> ["Japan" "China" "Korea"]
 (producer 10)
 (consumer)
 ```
+
 Третий способ для работы с очередью...
 ```
 (def queue (a/chan 10))
